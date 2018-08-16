@@ -439,7 +439,6 @@ def show_documentation():
         vim.command('let l:doc_lines = %s' % len(text.split('\n')))
     return True
 
-
 @catch_and_print_exceptions
 def clear_call_signatures():
     # Check if using command line call signatures
@@ -466,14 +465,49 @@ def clear_call_signatures():
     vim.current.window.cursor = cursor
 
 
+cached_signatures = None
+cached_line = -1
+show_signature = True
+
+@catch_and_print_exceptions
+def show_cache_signatures():
+    global cached_signatures
+    global show_signature
+    show_signature = True
+    if cached_signatures is not None:
+        show_call_signatures(cached_signatures)
+    # else:
+    #     show_call_signatures()
+
+@catch_and_print_exceptions
+def clear_cache_signatures():
+    global cached_signatures
+    cached_signatures = None
+    clear_call_signatures()
+
+def begin_completion():
+    global show_signature
+    show_signature = False
+
 @_check_jedi_availability(show_error=False)
 @catch_and_print_exceptions
 def show_call_signatures(signatures=()):
+    global show_signature
+    if show_signature is False:
+        return
+
+    global cached_signatures
+    line = vim_eval("getline('.')")
+    if cached_signatures is not None and len(line.strip()) > 2:
+        if len(cached_signatures) > 0:
+            signatures = cached_signatures
+
     if int(vim_eval("has('conceal') && g:jedi#show_call_signatures")) == 0:
         return
 
     if signatures == ():
         signatures = get_script().call_signatures()
+    cached_signatures = signatures
     clear_call_signatures()
 
     if not signatures:
@@ -544,7 +578,6 @@ def show_call_signatures(signatures=()):
         repl = prefix + (regex % (tup, text)) + add + line[end_column:]
 
         vim_eval('setline(%s, %s)' % (line_to_replace, repr(PythonToVimStr(repl))))
-
 
 @catch_and_print_exceptions
 def cmdline_call_signatures(signatures):

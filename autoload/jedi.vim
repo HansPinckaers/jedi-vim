@@ -472,6 +472,13 @@ function! jedi#show_call_signatures() abort
     endif
 endfunction
 
+function! jedi#begin_completion() abort
+    if s:_init_python == 0
+        return 1
+    endif
+
+    PythonJedi jedi_vim.begin_completion()
+endfunction
 
 function! jedi#clear_call_signatures() abort
     if s:_init_python == 0
@@ -483,6 +490,23 @@ function! jedi#clear_call_signatures() abort
 endfunction
 
 
+function! jedi#show_cache_signatures() abort
+    if s:_init_python == 0
+        return 1
+    endif
+
+    PythonJedi jedi_vim.show_cache_signatures()
+endfunction
+
+
+function! jedi#clear_cache_signatures() abort
+    if s:_init_python == 0
+        return 1
+    endif
+
+    PythonJedi jedi_vim.clear_cache_signatures()
+endfunction
+
 function! jedi#configure_call_signatures() abort
     augroup jedi_call_signatures
     autocmd! * <buffer>
@@ -490,7 +514,7 @@ function! jedi#configure_call_signatures() abort
         autocmd InsertEnter <buffer> let g:jedi#first_col = s:save_first_col()
     endif
     autocmd InsertEnter <buffer> let s:show_call_signatures_last = [0, 0, '']
-    autocmd InsertLeave <buffer> call jedi#clear_call_signatures()
+    autocmd InsertLeave <buffer> call jedi#clear_cache_signatures()
     if g:jedi#show_call_signatures_delay > 0
         autocmd InsertEnter <buffer> let b:_jedi_orig_updatetime = &updatetime
                     \ | let &updatetime = g:jedi#show_call_signatures_delay
